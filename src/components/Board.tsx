@@ -25,8 +25,14 @@ export const Board: React.FC<BoardProps> = ({ gameState, setGameState }) => {
         </div>
 
         {/* Supply */}
-        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-200 flex-1">
-          <h2 className="text-lg font-semibold mb-4 text-slate-800">Réserve</h2>
+        <div className="bg-white rounded-2xl shadow-sm p-4 border border-slate-200 flex-1 relative">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold text-slate-800">Réserve</h2>
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full font-bold text-sm ${(gameState.globalWarming || 0) >= 1.95 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+              <span className="text-lg">🌡️</span>
+              <span>RC: {(gameState.globalWarming || 0).toFixed(1)}°C</span>
+            </div>
+          </div>
           <Supply gameState={gameState} setGameState={setGameState} />
         </div>
 
