@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { BookOpen } from 'lucide-react';
 
 interface SetupScreenProps {
   onStart: (players: string[], aiCount: number) => void;
+  onShowRules: () => void;
 }
 
-export const SetupScreen: React.FC<SetupScreenProps> = ({ onStart }) => {
+export const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, onShowRules }) => {
   const [playerCount, setPlayerCount] = useState(1);
   const [aiCount, setAiCount] = useState(1);
   const [playerNames, setPlayerNames] = useState<string[]>(['Joueur 1']);
@@ -26,7 +28,15 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onStart }) => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 relative">
+      <button 
+        onClick={onShowRules}
+        className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 bg-white shadow-sm hover:bg-indigo-50 rounded-full transition-colors"
+      >
+        <BookOpen size={18} />
+        <span>Règles du jeu</span>
+      </button>
+
       <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full">
         <h1 className="text-3xl font-bold text-center text-indigo-600 mb-8">Miniville</h1>
         
