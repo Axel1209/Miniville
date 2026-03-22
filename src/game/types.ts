@@ -6,21 +6,21 @@ export enum CardColor {
 }
 
 export enum CardId {
-  CHAMP_DE_BLE = 'CHAMP_DE_BLE',
-  FERME = 'FERME',
-  FORET = 'FORET',
-  MINE = 'MINE',
-  VERGER = 'VERGER',
-  BOULANGERIE = 'BOULANGERIE',
-  SUPERETTE = 'SUPERETTE',
-  FROMAGERIE = 'FROMAGERIE',
-  FABRIQUE_DE_MEUBLES = 'FABRIQUE_DE_MEUBLES',
-  MARCHE_FRUITS_LEGUMES = 'MARCHE_FRUITS_LEGUMES',
-  CAFE = 'CAFE',
-  RESTAURANT = 'RESTAURANT',
-  STADE = 'STADE',
-  CENTRE_AFFAIRES = 'CENTRE_AFFAIRES',
-  CHAINE_TELEVISION = 'CHAINE_TELEVISION',
+  COMPOST = 'COMPOST',
+  EXTRACTION_CAOUTCHOUC = 'EXTRACTION_CAOUTCHOUC',
+  AMAP = 'AMAP',
+  PEAGE_AUTOROUTE = 'PEAGE_AUTOROUTE',
+  MAISON_AUTONOME = 'MAISON_AUTONOME',
+  EOLIENNE = 'EOLIENNE',
+  PUITS_PETROLE = 'PUITS_PETROLE',
+  CENTRALE_NUCLEAIRE = 'CENTRALE_NUCLEAIRE',
+  AEROPORT = 'AEROPORT',
+  BIOCOOP = 'BIOCOOP',
+  METHANISATION = 'METHANISATION',
+  RAFFINERIE = 'RAFFINERIE',
+  LE_SUN = 'LE_SUN',
+  USINE_MICHELIN = 'USINE_MICHELIN',
+  PANNEAUX_SOLAIRES = 'PANNEAUX_SOLAIRES',
 }
 
 export enum MonumentId {
@@ -38,6 +38,7 @@ export interface Card {
   activations: number[];
   icon: string;
   description: string;
+  isRC?: boolean;
 }
 
 export interface Monument {
@@ -55,6 +56,7 @@ export interface Player {
   coins: number;
   cards: Record<CardId, number>; // Count of each card
   monuments: Record<MonumentId, boolean>; // True if built
+  consecutiveNuclear: number;
 }
 
 export enum TurnState {
@@ -80,16 +82,9 @@ export interface GameState {
   supply: Record<CardId, number>; // Count of available cards
   logs: string[];
   winner: string | null;
-  pendingPurpleActions: PurpleAction[];
   hasRerolled: boolean;
   extraTurn: boolean;
-}
-
-export type PurpleActionType = 'TRADE_CARD' | 'STEAL_5';
-
-export interface PurpleAction {
-  type: PurpleActionType;
-  sourcePlayerId: string;
+  globalWarming: number;
 }
 
 export interface GameAction {
