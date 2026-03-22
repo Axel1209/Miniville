@@ -16,11 +16,10 @@ export const Board: React.FC<BoardProps> = ({ gameState, setGameState }) => {
   return (
     <div className="h-full flex flex-col md:flex-row">
       <div className="flex-1 flex flex-col overflow-y-auto p-4 space-y-6">
-        {/* Opponents */}
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        {/* All Players */}
+        <div className="flex flex-col md:flex-row gap-4 overflow-x-auto pb-2">
           {gameState.players.map((player, index) => {
-            if (index === gameState.currentPlayerIndex) return null;
-            return <PlayerArea key={player.id} player={player} isActive={false} />;
+            return <PlayerArea key={player.id} player={player} isActive={index === gameState.currentPlayerIndex} />;
           })}
         </div>
 
@@ -34,11 +33,6 @@ export const Board: React.FC<BoardProps> = ({ gameState, setGameState }) => {
             </div>
           </div>
           <Supply gameState={gameState} setGameState={setGameState} />
-        </div>
-
-        {/* Active Player */}
-        <div className="mt-auto">
-          <PlayerArea player={activePlayer} isActive={true} />
         </div>
       </div>
 
