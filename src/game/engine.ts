@@ -16,7 +16,6 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [CardId.EXTRACTION_CAOUTCHOUC]: 0,
         [CardId.PEAGE_AUTOROUTE]: 0,
         [CardId.MAISON_AUTONOME]: 0,
-        [CardId.EOLIENNE]: 0,
         [CardId.PUITS_PETROLE]: 0,
         [CardId.CENTRALE_NUCLEAIRE]: 0,
         [CardId.AEROPORT]: 0,
@@ -24,6 +23,7 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [CardId.METHANISATION]: 0,
         [CardId.RAFFINERIE]: 0,
         [CardId.LE_SUN]: 0,
+        [CardId.EOLIENNE]: 0,
         [CardId.USINE_MICHELIN]: 0,
         [CardId.PANNEAUX_SOLAIRES]: 0,
       },
@@ -49,7 +49,6 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [CardId.EXTRACTION_CAOUTCHOUC]: 0,
         [CardId.PEAGE_AUTOROUTE]: 0,
         [CardId.MAISON_AUTONOME]: 0,
-        [CardId.EOLIENNE]: 0,
         [CardId.PUITS_PETROLE]: 0,
         [CardId.CENTRALE_NUCLEAIRE]: 0,
         [CardId.AEROPORT]: 0,
@@ -57,6 +56,7 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [CardId.METHANISATION]: 0,
         [CardId.RAFFINERIE]: 0,
         [CardId.LE_SUN]: 0,
+        [CardId.EOLIENNE]: 0,
         [CardId.USINE_MICHELIN]: 0,
         [CardId.PANNEAUX_SOLAIRES]: 0,
       },
@@ -217,7 +217,7 @@ const processActivations = (state: GameState): GameState => {
       else if (cardId === CardId.MAISON_AUTONOME) gain = 2 * count;
       else if (cardId === CardId.BIOCOOP) gain = 3 * (activePlayer.cards[CardId.AMAP] || 0) * count;
       else if (cardId === CardId.METHANISATION) gain = 3 * (activePlayer.cards[CardId.COMPOST] || 0) * count;
-      else if (cardId === CardId.USINE_MICHELIN) gain = (isRCMalusActive ? 1 : 2) * (activePlayer.cards[CardId.EXTRACTION_CAOUTCHOUC] || 0) * count;
+      else if (cardId === CardId.USINE_MICHELIN) gain = (isRCMalusActive3 ? 1 : 2) * (activePlayer.cards[CardId.EXTRACTION_CAOUTCHOUC] || 0) * count;
       else if (cardId === CardId.RAFFINERIE) gain = (isRCMalusActive3 ? 1 : 3) * (activePlayer.cards[CardId.PUITS_PETROLE] || 0) * count;
 
       if (gain > 0) {
@@ -238,7 +238,6 @@ const processActivations = (state: GameState): GameState => {
         [CardId.EXTRACTION_CAOUTCHOUC]: 0,
         [CardId.PEAGE_AUTOROUTE]: 0,
         [CardId.MAISON_AUTONOME]: 0,
-        [CardId.EOLIENNE]: 0,
         [CardId.PUITS_PETROLE]: 0,
         [CardId.CENTRALE_NUCLEAIRE]: 0,
         [CardId.AEROPORT]: 0,
@@ -246,6 +245,7 @@ const processActivations = (state: GameState): GameState => {
         [CardId.METHANISATION]: 0,
         [CardId.RAFFINERIE]: 0,
         [CardId.LE_SUN]: 0,
+        [CardId.EOLIENNE]: 0,
         [CardId.USINE_MICHELIN]: 0,
         [CardId.PANNEAUX_SOLAIRES]: 0,
       };
@@ -394,4 +394,3 @@ export const endTurn = (state: GameState): GameState => {
 
   return newState;
 };
-
