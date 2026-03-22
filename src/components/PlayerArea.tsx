@@ -32,11 +32,17 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({ player, isActive }) => {
               return (
                 <div 
                   key={id} 
-                  className={`flex flex-col items-center p-2 rounded-lg border ${built ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'}`}
-                  title={monument.description}
+                  className={`flex flex-col items-center p-2 rounded-lg border relative ${built ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-slate-50 border-slate-200 text-slate-400 opacity-60'}`}
+                  title={`${monument.name} (Coût: ${monument.cost}) - ${monument.description}`}
                 >
                   <Icon size={20} className="mb-1" />
                   <span className="text-[10px] font-medium text-center leading-tight max-w-[60px]">{monument.name}</span>
+                  {!built && (
+                    <div className="absolute -top-2 -right-2 bg-yellow-100 text-yellow-800 text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-yellow-200 flex items-center gap-0.5">
+                      <Icons.Coins size={8} />
+                      {monument.cost}
+                    </div>
+                  )}
                 </div>
               );
             })}
