@@ -27,6 +27,7 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({ player, isActive }) => {
           <div className="flex gap-2 flex-wrap">
             {Object.entries(player.monuments).map(([id, built]) => {
               const monument = MONUMENTS[id as MonumentId];
+              if (!monument) return null;
               const Icon = (Icons as any)[monument.icon] || Icons.Building;
               return (
                 <div 
@@ -48,6 +49,7 @@ export const PlayerArea: React.FC<PlayerAreaProps> = ({ player, isActive }) => {
             {Object.entries(player.cards).map(([id, count]) => {
               if (count === 0) return null;
               const card = CARDS[id as CardId];
+              if (!card) return null;
               const Icon = (Icons as any)[card.icon] || Icons.Home;
               
               let bgColor = '';
