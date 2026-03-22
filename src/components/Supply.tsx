@@ -27,6 +27,8 @@ export const Supply: React.FC<SupplyProps> = ({ gameState, setGameState }) => {
 
   const renderCard = (cardId: CardId, count: number) => {
     const card = CARDS[cardId];
+    if (!card) return null;
+    
     const canAfford = activePlayer.coins >= card.cost;
     const isAvailable = count > 0;
     const isPurple = card.color === 'PURPLE';
@@ -82,6 +84,8 @@ export const Supply: React.FC<SupplyProps> = ({ gameState, setGameState }) => {
 
   const renderMonument = (monumentId: MonumentId) => {
     const monument = MONUMENTS[monumentId];
+    if (!monument) return null;
+    
     const isBuilt = activePlayer.monuments[monumentId];
     const canAfford = activePlayer.coins >= monument.cost;
     const canBuy = isBuyPhase && canAfford && !isBuilt;
@@ -132,7 +136,7 @@ export const Supply: React.FC<SupplyProps> = ({ gameState, setGameState }) => {
       <div>
         <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-3">Établissements</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-          {Object.entries(gameState.supply).map(([id, count]) => renderCard(id as CardId, count))}
+          {Object.entries(gameState.supply).map(([id, count]) => renderCard(id as CardId, count as number))}
         </div>
       </div>
     </div>
