@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GameState, TurnState, MonumentId, CardId } from '../game/types';
-import { rollDice, rerollDice, endTurn, resolvePurpleAction } from '../game/engine';
+import { rollDice, rerollDice, endTurn } from '../game/engine';
 import { CARDS } from '../game/cards';
 import * as Icons from 'lucide-react';
 
@@ -99,92 +99,7 @@ export const Controls: React.FC<ControlsProps> = ({ gameState, setGameState }) =
       );
 
     case TurnState.PURPLE_ACTION: {
-      const action = gameState.pendingPurpleActions[0];
-      
-      if (action.type === 'STEAL_5') {
-        const targets = gameState.players.filter(p => p.id !== activePlayer.id);
-        return (
-          <div className="space-y-4">
-            {renderDiceResult()}
-            <p className="text-center text-slate-600 font-medium mb-4">À qui voulez-vous voler 5 pièces ?</p>
-            <select 
-              className="w-full p-3 rounded-xl border border-slate-300 mb-4"
-              value={selectedTarget}
-              onChange={(e) => setSelectedTarget(e.target.value)}
-            >
-              <option value="">Sélectionner un joueur</option>
-              {targets.map(p => <option key={p.id} value={p.id}>{p.name} ({p.coins} pièces)</option>)}
-            </select>
-            <button
-              onClick={() => {
-                if (selectedTarget) {
-                  setGameState(resolvePurpleAction(gameState, 0, selectedTarget));
-                  setSelectedTarget('');
-                }
-              }}
-              disabled={!selectedTarget}
-              className="w-full bg-purple-600 text-white font-semibold py-3 rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-sm"
-            >
-              Voler
-            </button>
-          </div>
-        );
-      } else if (action.type === 'TRADE_CARD') {
-        const targets = gameState.players.filter(p => p.id !== activePlayer.id);
-        const myCards = Object.entries(activePlayer.cards).filter(([id, count]) => count > 0 && CARDS[id as CardId].color !== 'PURPLE');
-        const targetPlayer = gameState.players.find(p => p.id === selectedTarget);
-        const targetCards = targetPlayer ? Object.entries(targetPlayer.cards).filter(([id, count]) => count > 0 && CARDS[id as CardId].color !== 'PURPLE') : [];
-
-        return (
-          <div className="space-y-4">
-            {renderDiceResult()}
-            <p className="text-center text-slate-600 font-medium mb-2">Échange de carte (Centre d'affaires)</p>
-            
-            <select 
-              className="w-full p-2 rounded-lg border border-slate-300 text-sm"
-              value={selectedTarget}
-              onChange={(e) => { setSelectedTarget(e.target.value); setSelectedTake(''); }}
-            >
-              <option value="">1. Choisir un joueur</option>
-              {targets.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-
-            <select 
-              className="w-full p-2 rounded-lg border border-slate-300 text-sm"
-              value={selectedGive}
-              onChange={(e) => setSelectedGive(e.target.value as CardId)}
-            >
-              <option value="">2. Carte à donner</option>
-              {myCards.map(([id]) => <option key={id} value={id}>{CARDS[id as CardId].name}</option>)}
-            </select>
-
-            <select 
-              className="w-full p-2 rounded-lg border border-slate-300 text-sm"
-              value={selectedTake}
-              onChange={(e) => setSelectedTake(e.target.value as CardId)}
-              disabled={!selectedTarget}
-            >
-              <option value="">3. Carte à prendre</option>
-              {targetCards.map(([id]) => <option key={id} value={id}>{CARDS[id as CardId].name}</option>)}
-            </select>
-
-            <button
-              onClick={() => {
-                if (selectedTarget && selectedGive && selectedTake) {
-                  setGameState(resolvePurpleAction(gameState, 0, selectedTarget, selectedGive as CardId, selectedTake as CardId));
-                  setSelectedTarget('');
-                  setSelectedGive('');
-                  setSelectedTake('');
-                }
-              }}
-              disabled={!selectedTarget || !selectedGive || !selectedTake}
-              className="w-full bg-purple-600 text-white font-semibold py-3 rounded-xl hover:bg-purple-700 disabled:opacity-50 transition-colors shadow-sm mt-4"
-            >
-              Échanger
-            </button>
-          </div>
-        );
-      }
+      // No purple actions require targeting in the new set
       return null;
     }
 
