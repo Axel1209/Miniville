@@ -98,12 +98,12 @@ export const rollDice = (state: GameState, numDice: number): GameState => {
     logs: [...state.logs, `${currentPlayer.name} lance les dés et obtient ${total}.`],
   };
 
-  if (currentPlayer.monuments[MonumentId.PARC_ATTRACTIONS] && numDice === 2 && dice1 === dice2) {
+  if (currentPlayer.monuments[MonumentId.CENTRE_COMMERCIAL] && numDice === 2 && dice1 === dice2) {
     newState.extraTurn = true;
     newState.logs.push(`${currentPlayer.name} a fait un double et rejouera !`);
   }
 
-  if (currentPlayer.monuments[MonumentId.TOUR_RADIO] && !newState.hasRerolled) {
+  if (currentPlayer.monuments[MonumentId.PARC_ATTRACTIONS] && !newState.hasRerolled) {
     newState.turnState = TurnState.OPTIONAL_REROLL;
   } else {
     newState = processActivations(newState);
@@ -122,7 +122,7 @@ export const rerollDice = (state: GameState, doReroll: boolean): GameState => {
     ...state,
     hasRerolled: true,
     extraTurn: false, // Reset extra turn on reroll
-    logs: [...state.logs, `${currentPlayer.name} utilise la Tour Radio pour relancer.`],
+    logs: [...state.logs, `${currentPlayer.name} utilise le Musée des Confluences pour relancer.`],
   };
 
   return rollDice(newState, state.diceResult.length);
@@ -184,15 +184,14 @@ const processActivations = (state: GameState): GameState => {
 
   // BLUE CARDS (All players)
   newState.players.forEach(player => {
-    const blueCards = [CardId.COMPOST, CardId.EXTRACTION_CAOUTCHOUC, CardId.EOLIENNE, CardId.PUITS_PETROLE, CardId.RAFFINERIE, CardId.PANNEAUX_SOLAIRES];
+    const blueCards = [CardId.COMPOST, CardId.EXTRACTION_CAOUTCHOUC, CardId.EOLIENNE, CardId.PUITS_PETROLE, CardId.PANNEAUX_SOLAIRES];
     blueCards.forEach(cardId => {
       if ((player.cards[cardId] || 0) > 0 && CARDS[cardId].activations.includes(total)) {
         let gain = 0;
-        if (cardId === CardId.COMPOST) gain = 1;
+        if (cardId === CardId.COMPOST) gain = 2;
         else if (cardId === CardId.EXTRACTION_CAOUTCHOUC) gain = isRCMalusActive ? 0 : 1;
-        else if (cardId === CardId.EOLIENNE) gain = 1;
+        else if (cardId === CardId.EOLIENNE) gain = 3;
         else if (cardId === CardId.PUITS_PETROLE) gain = isRCMalusActive ? 1 : 2;
-        else if (cardId === CardId.RAFFINERIE) gain = isRCMalusActive ? 1 : 4;
         else if (cardId === CardId.PANNEAUX_SOLAIRES) gain = 3;
         
         const totalGain = gain * (player.cards[cardId] || 0);
@@ -207,18 +206,19 @@ const processActivations = (state: GameState): GameState => {
   });
 
   // GREEN CARDS (Active player only)
-  const greenCards = [CardId.AMAP, CardId.MAISON_AUTONOME, CardId.BIOCOOP, CardId.METHANISATION, CardId.USINE_MICHELIN];
+  const greenCards = [CardId.AMAP, CardId.MAISON_AUTONOME, CardId.BIOCOOP, CardId.METHANISATION, CardId.USINE_MICHELIN, CardId.RAFFINERIE];
   greenCards.forEach(cardId => {
     if ((activePlayer.cards[cardId] || 0) > 0 && CARDS[cardId].activations.includes(total)) {
       let gain = 0;
       const count = activePlayer.cards[cardId] || 0;
-      const hasMall = activePlayer.monuments[MonumentId.CENTRE_COMMERCIAL];
+      const isRCMalusActive3 = (newState.globalWarming || 0) > 3.05;
 
-      if (cardId === CardId.AMAP) gain = (1 + (hasMall ? 1 : 0)) * count;
-      else if (cardId === CardId.MAISON_AUTONOME) gain = (2 + (hasMall ? 1 : 0)) * count;
+      if (cardId === CardId.AMAP) gain = 1 * count;
+      else if (cardId === CardId.MAISON_AUTONOME) gain = 2 * count;
       else if (cardId === CardId.BIOCOOP) gain = 3 * (activePlayer.cards[CardId.AMAP] || 0) * count;
       else if (cardId === CardId.METHANISATION) gain = 3 * (activePlayer.cards[CardId.COMPOST] || 0) * count;
       else if (cardId === CardId.USINE_MICHELIN) gain = (isRCMalusActive ? 1 : 2) * (activePlayer.cards[CardId.EXTRACTION_CAOUTCHOUC] || 0) * count;
+      else if (cardId === CardId.RAFFINERIE) gain = (isRCMalusActive3 ? 1 : 3) * (activePlayer.cards[CardId.PUITS_PETROLE] || 0) * count;
 
       if (gain > 0) {
         activePlayer.coins += gain;
@@ -257,6 +257,30 @@ const processActivations = (state: GameState): GameState => {
       };
       activePlayer.consecutiveNuclear = 0;
       newState.logs.push(`💥 BOUM ! La ville de ${activePlayer.name} est détruite par la Centrale nucléaire !`);
+
+      // Destroy "6" cards of immediate neighbors
+      const N = newState.players.length;
+      if (N > 1) {
+        const leftNeighborIdx = (newState.currentPlayerIndex - 1 + N) % N;
+        const rightNeighborIdx = (newState.currentPlayerIndex + 1) % N;
+        
+        const neighborsToDestroy = new Set([leftNeighborIdx, rightNeighborIdx]);
+        neighborsToDestroy.forEach(idx => {
+          const neighbor = newState.players[idx];
+          let destroyedSomething = false;
+          if ((neighbor.cards[CardId.CENTRALE_NUCLEAIRE] || 0) > 0) {
+            neighbor.cards[CardId.CENTRALE_NUCLEAIRE] = 0;
+            destroyedSomething = true;
+          }
+          if ((neighbor.cards[CardId.AEROPORT] || 0) > 0) {
+            neighbor.cards[CardId.AEROPORT] = 0;
+            destroyedSomething = true;
+          }
+          if (destroyedSomething) {
+            newState.logs.push(`💥 L'explosion détruit les bâtiments 6 de ${neighbor.name} !`);
+          }
+        });
+      }
     } else {
       activePlayer.coins += 6;
       newState.logs.push(`${activePlayer.name} gagne 6 pièce(s) avec la Centrale nucléaire (Attention: ${activePlayer.consecutiveNuclear}/2).`);
