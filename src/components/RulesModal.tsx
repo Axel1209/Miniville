@@ -34,7 +34,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               But du jeu
             </h3>
             <p className="leading-relaxed">
-              Vous êtes le maire d'une ville en plein développement. Votre objectif est d'être le <strong>premier joueur à construire ses 4 Monuments</strong> (Gare, Centre Commercial, Parc d'Attractions, Tour Radio).
+              Vous êtes le maire d'une ville en plein développement. Votre objectif est d'être le <strong>premier joueur à construire ses 4 Monuments</strong> (Aire de covoiturage, Siège EELV, Musée des Confluences, Mont Saint-Michel).
             </p>
           </section>
 
@@ -46,7 +46,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
             </h3>
             <ol className="list-decimal list-inside space-y-3 ml-2">
               <li>
-                <strong>Lancer les dés :</strong> Lancez 1 dé. Si vous avez construit la <em>Gare</em>, vous pouvez choisir de lancer 1 ou 2 dés.
+                <strong>Lancer les dés :</strong> Lancez 1 dé. Si vous avez construit l'<em>Aire de covoiturage</em>, vous pouvez choisir de lancer 1 ou 2 dés.
               </li>
               <li>
                 <strong>Gagner des revenus :</strong> Le résultat des dés active les établissements correspondants (le numéro en haut à gauche des cartes).
@@ -95,7 +95,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
             <ul className="list-disc list-inside text-sm text-amber-800 space-y-2">
               <li>Si le RC atteint <strong>2.0°C</strong>, des malus s'appliquent à tous les joueurs.</li>
               <li><em>Exemple :</em> L'Extraction de Caoutchouc ne rapporte plus rien, et l'Aéroport vous coûte une taxe carbone.</li>
-              <li><strong>Attention à la Centrale Nucléaire :</strong> Elle rapporte beaucoup, mais si elle est activée 3 fois de suite, votre ville explose (vous perdez tout) !</li>
+              <li><strong>Attention à la Centrale Nucléaire :</strong> Elle rapporte beaucoup, mais si elle est activée 2 fois de suite, votre ville explose (vous perdez tout) et les bâtiments 6 de vos voisins sont détruits !</li>
             </ul>
           </section>
 
