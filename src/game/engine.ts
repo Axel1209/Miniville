@@ -1,5 +1,5 @@
 import { CARDS, INITIAL_SUPPLY, MONUMENTS } from './cards';
-import { CardColor, CardId, GameState, MonumentId, Player, PurpleAction, TurnState } from './types';
+import { CardColor, CardId, GameState, MonumentId, Player, TurnState } from './types';
 
 export const createInitialState = (playerNames: string[], aiCount: number): GameState => {
   const players: Player[] = [];
@@ -11,21 +11,21 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
       isAI: false,
       coins: 3,
       cards: {
-        [CardId.CHAMP_DE_BLE]: 1,
-        [CardId.BOULANGERIE]: 1,
-        [CardId.FERME]: 0,
-        [CardId.FORET]: 0,
-        [CardId.MINE]: 0,
-        [CardId.VERGER]: 0,
-        [CardId.SUPERETTE]: 0,
-        [CardId.FROMAGERIE]: 0,
-        [CardId.FABRIQUE_DE_MEUBLES]: 0,
-        [CardId.MARCHE_FRUITS_LEGUMES]: 0,
-        [CardId.CAFE]: 0,
-        [CardId.RESTAURANT]: 0,
-        [CardId.STADE]: 0,
-        [CardId.CENTRE_AFFAIRES]: 0,
-        [CardId.CHAINE_TELEVISION]: 0,
+        [CardId.COMPOST]: 1,
+        [CardId.AMAP]: 1,
+        [CardId.EXTRACTION_CAOUTCHOUC]: 0,
+        [CardId.PEAGE_AUTOROUTE]: 0,
+        [CardId.MAISON_AUTONOME]: 0,
+        [CardId.EOLIENNE]: 0,
+        [CardId.PUITS_PETROLE]: 0,
+        [CardId.CENTRALE_NUCLEAIRE]: 0,
+        [CardId.AEROPORT]: 0,
+        [CardId.BIOCOOP]: 0,
+        [CardId.METHANISATION]: 0,
+        [CardId.RAFFINERIE]: 0,
+        [CardId.LE_SUN]: 0,
+        [CardId.USINE_MICHELIN]: 0,
+        [CardId.PANNEAUX_SOLAIRES]: 0,
       },
       monuments: {
         [MonumentId.GARE]: false,
@@ -33,6 +33,7 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [MonumentId.PARC_ATTRACTIONS]: false,
         [MonumentId.TOUR_RADIO]: false,
       },
+      consecutiveNuclear: 0,
     });
   }
 
@@ -43,21 +44,21 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
       isAI: true,
       coins: 3,
       cards: {
-        [CardId.CHAMP_DE_BLE]: 1,
-        [CardId.BOULANGERIE]: 1,
-        [CardId.FERME]: 0,
-        [CardId.FORET]: 0,
-        [CardId.MINE]: 0,
-        [CardId.VERGER]: 0,
-        [CardId.SUPERETTE]: 0,
-        [CardId.FROMAGERIE]: 0,
-        [CardId.FABRIQUE_DE_MEUBLES]: 0,
-        [CardId.MARCHE_FRUITS_LEGUMES]: 0,
-        [CardId.CAFE]: 0,
-        [CardId.RESTAURANT]: 0,
-        [CardId.STADE]: 0,
-        [CardId.CENTRE_AFFAIRES]: 0,
-        [CardId.CHAINE_TELEVISION]: 0,
+        [CardId.COMPOST]: 1,
+        [CardId.AMAP]: 1,
+        [CardId.EXTRACTION_CAOUTCHOUC]: 0,
+        [CardId.PEAGE_AUTOROUTE]: 0,
+        [CardId.MAISON_AUTONOME]: 0,
+        [CardId.EOLIENNE]: 0,
+        [CardId.PUITS_PETROLE]: 0,
+        [CardId.CENTRALE_NUCLEAIRE]: 0,
+        [CardId.AEROPORT]: 0,
+        [CardId.BIOCOOP]: 0,
+        [CardId.METHANISATION]: 0,
+        [CardId.RAFFINERIE]: 0,
+        [CardId.LE_SUN]: 0,
+        [CardId.USINE_MICHELIN]: 0,
+        [CardId.PANNEAUX_SOLAIRES]: 0,
       },
       monuments: {
         [MonumentId.GARE]: false,
@@ -65,6 +66,7 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [MonumentId.PARC_ATTRACTIONS]: false,
         [MonumentId.TOUR_RADIO]: false,
       },
+      consecutiveNuclear: 0,
     });
   }
 
@@ -76,9 +78,9 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
     supply: { ...INITIAL_SUPPLY },
     logs: ['La partie commence !'],
     winner: null,
-    pendingPurpleActions: [],
     hasRerolled: false,
     extraTurn: false,
+    globalWarming: 0,
   };
 };
 
@@ -131,63 +133,92 @@ const processActivations = (state: GameState): GameState => {
   const total = newState.diceResult.reduce((a, b) => a + b, 0);
   const activePlayer = newState.players[newState.currentPlayerIndex];
 
+  // Check if any RC card is activated to increase global warming
+  let rcActivationsCount = 0;
+  newState.players.forEach(player => {
+    Object.entries(player.cards).forEach(([cardId, count]) => {
+      const card = CARDS[cardId as CardId];
+      if (count > 0 && card && card.activations.includes(total) && card.isRC) {
+        // Only count if it actually activates for the player
+        if (card.color === CardColor.BLUE || (card.color === CardColor.GREEN && player.id === activePlayer.id) || (card.color === CardColor.RED && player.id !== activePlayer.id) || (card.color === CardColor.PURPLE && player.id === activePlayer.id)) {
+           rcActivationsCount += count;
+        }
+      }
+    });
+  });
+
+  if (rcActivationsCount > 0) {
+    const increment = 0.1 * rcActivationsCount;
+    newState.globalWarming = (newState.globalWarming || 0) + increment;
+    // Fix floating point issues
+    newState.globalWarming = Math.round(newState.globalWarming * 10) / 10;
+    newState.logs.push(`⚠️ Le réchauffement climatique augmente de ${increment.toFixed(1)}°C ! (${newState.globalWarming.toFixed(1)}°C)`);
+  }
+
+  const isRCMalusActive = (newState.globalWarming || 0) >= 1.95; // using 1.95 to avoid float precision issues
+
   // RED CARDS (Counter-clockwise from active player)
   for (let i = 1; i < newState.players.length; i++) {
     const targetIdx = (newState.currentPlayerIndex - i + newState.players.length) % newState.players.length;
     const targetPlayer = newState.players[targetIdx];
     
-    // Cafe
-    if (targetPlayer.cards[CardId.CAFE] > 0 && CARDS[CardId.CAFE].activations.includes(total)) {
-      const amount = Math.min(activePlayer.coins, 1 * targetPlayer.cards[CardId.CAFE]);
+    // Péage autoroute
+    if ((targetPlayer.cards[CardId.PEAGE_AUTOROUTE] || 0) > 0 && CARDS[CardId.PEAGE_AUTOROUTE].activations.includes(total)) {
+      const amount = Math.min(activePlayer.coins, 2 * (targetPlayer.cards[CardId.PEAGE_AUTOROUTE] || 0));
       if (amount > 0) {
         activePlayer.coins -= amount;
         targetPlayer.coins += amount;
-        newState.logs.push(`${targetPlayer.name} prend ${amount} pièce(s) à ${activePlayer.name} (Café).`);
+        newState.logs.push(`${targetPlayer.name} prend ${amount} pièce(s) à ${activePlayer.name} (Péage autoroute).`);
       }
     }
-    // Restaurant
-    if (targetPlayer.cards[CardId.RESTAURANT] > 0 && CARDS[CardId.RESTAURANT].activations.includes(total)) {
-      const amount = Math.min(activePlayer.coins, 2 * targetPlayer.cards[CardId.RESTAURANT]);
+    // Le Sun
+    if ((targetPlayer.cards[CardId.LE_SUN] || 0) > 0 && CARDS[CardId.LE_SUN].activations.includes(total)) {
+      const amount = Math.min(activePlayer.coins, 3 * (targetPlayer.cards[CardId.LE_SUN] || 0));
       if (amount > 0) {
         activePlayer.coins -= amount;
         targetPlayer.coins += amount;
-        newState.logs.push(`${targetPlayer.name} prend ${amount} pièce(s) à ${activePlayer.name} (Restaurant).`);
+        newState.logs.push(`${targetPlayer.name} prend ${amount} pièce(s) à ${activePlayer.name} (Le Sun).`);
       }
     }
   }
 
   // BLUE CARDS (All players)
   newState.players.forEach(player => {
-    const blueCards = [CardId.CHAMP_DE_BLE, CardId.FERME, CardId.FORET, CardId.MINE, CardId.VERGER];
+    const blueCards = [CardId.COMPOST, CardId.EXTRACTION_CAOUTCHOUC, CardId.EOLIENNE, CardId.PUITS_PETROLE, CardId.RAFFINERIE, CardId.PANNEAUX_SOLAIRES];
     blueCards.forEach(cardId => {
-      if (player.cards[cardId] > 0 && CARDS[cardId].activations.includes(total)) {
+      if ((player.cards[cardId] || 0) > 0 && CARDS[cardId].activations.includes(total)) {
         let gain = 0;
-        if (cardId === CardId.CHAMP_DE_BLE) gain = 1;
-        else if (cardId === CardId.FERME) gain = 1;
-        else if (cardId === CardId.FORET) gain = 1;
-        else if (cardId === CardId.MINE) gain = 5;
-        else if (cardId === CardId.VERGER) gain = 3;
+        if (cardId === CardId.COMPOST) gain = 2;
+        else if (cardId === CardId.EXTRACTION_CAOUTCHOUC) gain = isRCMalusActive ? 0 : 1;
+        else if (cardId === CardId.EOLIENNE) gain = 1;
+        else if (cardId === CardId.PUITS_PETROLE) gain = isRCMalusActive ? 1 : 2;
+        else if (cardId === CardId.RAFFINERIE) gain = isRCMalusActive ? 2 : 6;
+        else if (cardId === CardId.PANNEAUX_SOLAIRES) gain = 3;
         
-        const totalGain = gain * player.cards[cardId];
-        player.coins += totalGain;
-        newState.logs.push(`${player.name} gagne ${totalGain} pièce(s) avec ${CARDS[cardId].name}.`);
+        const totalGain = gain * (player.cards[cardId] || 0);
+        if (totalGain > 0) {
+          player.coins += totalGain;
+          newState.logs.push(`${player.name} gagne ${totalGain} pièce(s) avec ${CARDS[cardId].name}.`);
+        } else if (gain === 0 && cardId === CardId.EXTRACTION_CAOUTCHOUC) {
+          newState.logs.push(`${player.name} ne gagne rien avec ${CARDS[cardId].name} à cause du RC.`);
+        }
       }
     });
   });
 
   // GREEN CARDS (Active player only)
-  const greenCards = [CardId.BOULANGERIE, CardId.SUPERETTE, CardId.FROMAGERIE, CardId.FABRIQUE_DE_MEUBLES, CardId.MARCHE_FRUITS_LEGUMES];
+  const greenCards = [CardId.AMAP, CardId.MAISON_AUTONOME, CardId.BIOCOOP, CardId.METHANISATION, CardId.USINE_MICHELIN];
   greenCards.forEach(cardId => {
-    if (activePlayer.cards[cardId] > 0 && CARDS[cardId].activations.includes(total)) {
+    if ((activePlayer.cards[cardId] || 0) > 0 && CARDS[cardId].activations.includes(total)) {
       let gain = 0;
-      const count = activePlayer.cards[cardId];
+      const count = activePlayer.cards[cardId] || 0;
       const hasMall = activePlayer.monuments[MonumentId.CENTRE_COMMERCIAL];
 
-      if (cardId === CardId.BOULANGERIE) gain = (1 + (hasMall ? 1 : 0)) * count;
-      else if (cardId === CardId.SUPERETTE) gain = (3 + (hasMall ? 1 : 0)) * count;
-      else if (cardId === CardId.FROMAGERIE) gain = 3 * activePlayer.cards[CardId.FERME] * count;
-      else if (cardId === CardId.FABRIQUE_DE_MEUBLES) gain = 3 * (activePlayer.cards[CardId.FORET] + activePlayer.cards[CardId.MINE]) * count;
-      else if (cardId === CardId.MARCHE_FRUITS_LEGUMES) gain = 2 * activePlayer.cards[CardId.VERGER] * count;
+      if (cardId === CardId.AMAP) gain = (1 + (hasMall ? 1 : 0)) * count;
+      else if (cardId === CardId.MAISON_AUTONOME) gain = (2 + (hasMall ? 1 : 0)) * count;
+      else if (cardId === CardId.BIOCOOP) gain = 3 * (activePlayer.cards[CardId.AMAP] || 0) * count;
+      else if (cardId === CardId.METHANISATION) gain = 3 * (activePlayer.cards[CardId.COMPOST] || 0) * count;
+      else if (cardId === CardId.USINE_MICHELIN) gain = (isRCMalusActive ? 1 : 2) * (activePlayer.cards[CardId.EXTRACTION_CAOUTCHOUC] || 0) * count;
 
       if (gain > 0) {
         activePlayer.coins += gain;
@@ -197,76 +228,67 @@ const processActivations = (state: GameState): GameState => {
   });
 
   // PURPLE CARDS (Active player only)
-  const pendingActions: PurpleAction[] = [];
-  
-  if (activePlayer.cards[CardId.STADE] > 0 && CARDS[CardId.STADE].activations.includes(total)) {
+  if ((activePlayer.cards[CardId.CENTRALE_NUCLEAIRE] || 0) > 0 && CARDS[CardId.CENTRALE_NUCLEAIRE].activations.includes(total)) {
+    activePlayer.consecutiveNuclear += 1;
+    if (activePlayer.consecutiveNuclear >= 3) {
+      activePlayer.coins = 0;
+      activePlayer.cards = {
+        [CardId.COMPOST]: 1,
+        [CardId.AMAP]: 1,
+        [CardId.EXTRACTION_CAOUTCHOUC]: 0,
+        [CardId.PEAGE_AUTOROUTE]: 0,
+        [CardId.MAISON_AUTONOME]: 0,
+        [CardId.EOLIENNE]: 0,
+        [CardId.PUITS_PETROLE]: 0,
+        [CardId.CENTRALE_NUCLEAIRE]: 0,
+        [CardId.AEROPORT]: 0,
+        [CardId.BIOCOOP]: 0,
+        [CardId.METHANISATION]: 0,
+        [CardId.RAFFINERIE]: 0,
+        [CardId.LE_SUN]: 0,
+        [CardId.USINE_MICHELIN]: 0,
+        [CardId.PANNEAUX_SOLAIRES]: 0,
+      };
+      activePlayer.monuments = {
+        [MonumentId.GARE]: false,
+        [MonumentId.CENTRE_COMMERCIAL]: false,
+        [MonumentId.PARC_ATTRACTIONS]: false,
+        [MonumentId.TOUR_RADIO]: false,
+      };
+      activePlayer.consecutiveNuclear = 0;
+      newState.logs.push(`💥 BOUM ! La ville de ${activePlayer.name} est détruite par la Centrale nucléaire !`);
+    } else {
+      activePlayer.coins += 6;
+      newState.logs.push(`${activePlayer.name} gagne 6 pièce(s) avec la Centrale nucléaire (Attention: ${activePlayer.consecutiveNuclear}/3).`);
+    }
+  } else {
+    // Reset consecutive nuclear if not activated
+    activePlayer.consecutiveNuclear = 0;
+  }
+
+  if ((activePlayer.cards[CardId.AEROPORT] || 0) > 0 && CARDS[CardId.AEROPORT].activations.includes(total)) {
     let totalGained = 0;
     newState.players.forEach(p => {
       if (p.id !== activePlayer.id) {
-        const amount = Math.min(p.coins, 2);
+        const amount = Math.min(p.coins, 3);
         p.coins -= amount;
         totalGained += amount;
       }
     });
     if (totalGained > 0) {
       activePlayer.coins += totalGained;
-      newState.logs.push(`${activePlayer.name} gagne ${totalGained} pièce(s) avec le Stade.`);
+      newState.logs.push(`${activePlayer.name} gagne ${totalGained} pièce(s) avec l'Aéroport.`);
+    }
+    
+    if (isRCMalusActive) {
+      const tax = Math.min(activePlayer.coins, 5);
+      activePlayer.coins -= tax;
+      newState.logs.push(`✈️ Taxe carbone ! ${activePlayer.name} paie ${tax} pièce(s) pour l'Aéroport.`);
     }
   }
 
-  if (activePlayer.cards[CardId.CHAINE_TELEVISION] > 0 && CARDS[CardId.CHAINE_TELEVISION].activations.includes(total)) {
-    pendingActions.push({ type: 'STEAL_5', sourcePlayerId: activePlayer.id });
-  }
+  newState.turnState = TurnState.BUY_PHASE;
 
-  if (activePlayer.cards[CardId.CENTRE_AFFAIRES] > 0 && CARDS[CardId.CENTRE_AFFAIRES].activations.includes(total)) {
-    pendingActions.push({ type: 'TRADE_CARD', sourcePlayerId: activePlayer.id });
-  }
-
-  if (pendingActions.length > 0) {
-    newState.pendingPurpleActions = pendingActions;
-    newState.turnState = TurnState.PURPLE_ACTION;
-  } else {
-    newState.turnState = TurnState.BUY_PHASE;
-  }
-
-  return newState;
-};
-
-export const resolvePurpleAction = (
-  state: GameState,
-  actionIndex: number,
-  targetPlayerId: string,
-  giveCardId?: CardId,
-  takeCardId?: CardId
-): GameState => {
-  const newState = { ...state };
-  const action = newState.pendingPurpleActions[actionIndex];
-  const activePlayer = newState.players[newState.currentPlayerIndex];
-  const targetPlayer = newState.players.find(p => p.id === targetPlayerId);
-
-  if (!action || !targetPlayer) return state;
-
-  if (action.type === 'STEAL_5') {
-    const amount = Math.min(targetPlayer.coins, 5);
-    targetPlayer.coins -= amount;
-    activePlayer.coins += amount;
-    newState.logs.push(`${activePlayer.name} vole ${amount} pièce(s) à ${targetPlayer.name} (Chaîne de télévision).`);
-  } else if (action.type === 'TRADE_CARD' && giveCardId && takeCardId) {
-    if (activePlayer.cards[giveCardId] > 0 && targetPlayer.cards[takeCardId] > 0) {
-      activePlayer.cards[giveCardId]--;
-      targetPlayer.cards[giveCardId]++;
-      
-      targetPlayer.cards[takeCardId]--;
-      activePlayer.cards[takeCardId]++;
-      
-      newState.logs.push(`${activePlayer.name} échange ${CARDS[giveCardId].name} contre ${CARDS[takeCardId].name} de ${targetPlayer.name} (Centre d'affaires).`);
-    }
-  }
-
-  newState.pendingPurpleActions.splice(actionIndex, 1);
-  if (newState.pendingPurpleActions.length === 0) {
-    newState.turnState = TurnState.BUY_PHASE;
-  }
   return newState;
 };
 
@@ -278,13 +300,13 @@ export const buyCard = (state: GameState, cardId: CardId | null): GameState => {
     const card = CARDS[cardId];
     if (activePlayer.coins >= card.cost && newState.supply[cardId] > 0) {
       // Check purple limit
-      if (card.color === CardColor.PURPLE && activePlayer.cards[cardId] > 0) {
+      if (card.color === CardColor.PURPLE && (activePlayer.cards[cardId] || 0) > 0) {
         // Cannot buy more than 1 of each purple card
         return state;
       }
       
       activePlayer.coins -= card.cost;
-      activePlayer.cards[cardId]++;
+      activePlayer.cards[cardId] = (activePlayer.cards[cardId] || 0) + 1;
       newState.supply[cardId]--;
       newState.logs.push(`${activePlayer.name} achète ${card.name}.`);
     } else {
@@ -348,3 +370,4 @@ export const endTurn = (state: GameState): GameState => {
 
   return newState;
 };
+
