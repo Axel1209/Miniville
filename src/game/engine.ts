@@ -188,11 +188,11 @@ const processActivations = (state: GameState): GameState => {
     blueCards.forEach(cardId => {
       if ((player.cards[cardId] || 0) > 0 && CARDS[cardId].activations.includes(total)) {
         let gain = 0;
-        if (cardId === CardId.COMPOST) gain = 2;
+        if (cardId === CardId.COMPOST) gain = 1;
         else if (cardId === CardId.EXTRACTION_CAOUTCHOUC) gain = isRCMalusActive ? 0 : 1;
         else if (cardId === CardId.EOLIENNE) gain = 1;
         else if (cardId === CardId.PUITS_PETROLE) gain = isRCMalusActive ? 1 : 2;
-        else if (cardId === CardId.RAFFINERIE) gain = isRCMalusActive ? 2 : 6;
+        else if (cardId === CardId.RAFFINERIE) gain = isRCMalusActive ? 1 : 4;
         else if (cardId === CardId.PANNEAUX_SOLAIRES) gain = 3;
         
         const totalGain = gain * (player.cards[cardId] || 0);
@@ -230,7 +230,7 @@ const processActivations = (state: GameState): GameState => {
   // PURPLE CARDS (Active player only)
   if ((activePlayer.cards[CardId.CENTRALE_NUCLEAIRE] || 0) > 0 && CARDS[CardId.CENTRALE_NUCLEAIRE].activations.includes(total)) {
     activePlayer.consecutiveNuclear += 1;
-    if (activePlayer.consecutiveNuclear >= 3) {
+    if (activePlayer.consecutiveNuclear >= 2) {
       activePlayer.coins = 0;
       activePlayer.cards = {
         [CardId.COMPOST]: 1,
@@ -259,7 +259,7 @@ const processActivations = (state: GameState): GameState => {
       newState.logs.push(`💥 BOUM ! La ville de ${activePlayer.name} est détruite par la Centrale nucléaire !`);
     } else {
       activePlayer.coins += 6;
-      newState.logs.push(`${activePlayer.name} gagne 6 pièce(s) avec la Centrale nucléaire (Attention: ${activePlayer.consecutiveNuclear}/3).`);
+      newState.logs.push(`${activePlayer.name} gagne 6 pièce(s) avec la Centrale nucléaire (Attention: ${activePlayer.consecutiveNuclear}/2).`);
     }
   } else {
     // Reset consecutive nuclear if not activated
