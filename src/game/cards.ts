@@ -47,15 +47,6 @@ export const CARDS: Record<CardId, Card> = {
     icon: 'Home',
     description: 'Recevez 2 pièces de la banque, uniquement pendant votre tour.',
   },
-  [CardId.EOLIENNE]: {
-    id: CardId.EOLIENNE,
-    name: 'Éolienne',
-    cost: 2,
-    color: CardColor.BLUE,
-    activations: [9],
-    icon: 'Wind',
-    description: 'Recevez 3 pièces de la banque.',
-  },
   [CardId.PUITS_PETROLE]: {
     id: CardId.PUITS_PETROLE,
     name: 'Puits de pétrole',
@@ -121,6 +112,15 @@ export const CARDS: Record<CardId, Card> = {
     icon: 'Sun',
     description: 'Recevez 3 pièces du joueur qui a lancé les dés.',
   },
+  [CardId.EOLIENNE]: {
+    id: CardId.EOLIENNE,
+    name: 'Éolienne',
+    cost: 2,
+    color: CardColor.BLUE,
+    activations: [9],
+    icon: 'Wind',
+    description: 'Recevez 3 pièces de la banque.',
+  },
   [CardId.USINE_MICHELIN]: {
     id: CardId.USINE_MICHELIN,
     name: 'Usine Michelin',
@@ -128,7 +128,7 @@ export const CARDS: Record<CardId, Card> = {
     color: CardColor.GREEN,
     activations: [10],
     icon: 'CircleDashed',
-    description: 'Recevez 2 pièces par Extraction caoutchouc. (Malus RC >= 2°C : 1 pièce par Extraction). +0.1°C RC.',
+    description: 'Recevez 2 pièces par Extraction caoutchouc. (Malus RC > 3°C : 1 pièce par Extraction). +0.1°C RC.',
     isRC: true,
   },
   [CardId.PANNEAUX_SOLAIRES]: {
@@ -179,7 +179,6 @@ export const INITIAL_SUPPLY: Record<CardId, number> = {
   [CardId.AMAP]: 6,
   [CardId.PEAGE_AUTOROUTE]: 6,
   [CardId.MAISON_AUTONOME]: 6,
-  [CardId.EOLIENNE]: 6,
   [CardId.PUITS_PETROLE]: 6,
   [CardId.CENTRALE_NUCLEAIRE]: 4,
   [CardId.AEROPORT]: 4,
@@ -187,6 +186,7 @@ export const INITIAL_SUPPLY: Record<CardId, number> = {
   [CardId.METHANISATION]: 6,
   [CardId.RAFFINERIE]: 6,
   [CardId.LE_SUN]: 6,
+  [CardId.EOLIENNE]: 6,
   [CardId.USINE_MICHELIN]: 6,
   [CardId.PANNEAUX_SOLAIRES]: 6,
 };
