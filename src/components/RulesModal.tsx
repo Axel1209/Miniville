@@ -33,9 +33,15 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               <Building size={20} className="text-indigo-500" />
               But du jeu
             </h3>
-            <p className="leading-relaxed">
-              Vous êtes le maire d'une ville en plein développement. Votre objectif est d'être le <strong>premier joueur à construire ses 4 Monuments</strong> (Aire de covoiturage, Siège EELV, Musée des Confluences, Mont Saint-Michel).
+            <p className="leading-relaxed mb-2">
+              Vous êtes le maire d'une ville en plein développement. Votre objectif est d'être le <strong>premier joueur à construire ses 4 Monuments</strong> :
             </p>
+            <ul className="list-disc list-inside space-y-1 ml-2 text-sm">
+              <li><strong>Aire de covoiturage</strong> (Coût : 5 pièces)</li>
+              <li><strong>Siège EELV</strong> (Coût : 15 pièces)</li>
+              <li><strong>Musée des Confluences</strong> (Coût : 30 pièces)</li>
+              <li><strong>Mont Saint-Michel</strong> (Coût : 50 pièces)</li>
+            </ul>
           </section>
 
           {/* Tour de jeu */}
