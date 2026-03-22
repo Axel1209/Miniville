@@ -80,7 +80,7 @@ export const Controls: React.FC<ControlsProps> = ({ gameState, setGameState }) =
       return (
         <div className="space-y-4">
           {renderDiceResult()}
-          <p className="text-center text-slate-600 font-medium mb-4">Voulez-vous relancer les dés (Tour Radio) ?</p>
+          <p className="text-center text-slate-600 font-medium mb-4">Voulez-vous relancer les dés (Musée des Confluences) ?</p>
           <div className="flex gap-3">
             <button
               onClick={() => setGameState(rerollDice(gameState, true))}
