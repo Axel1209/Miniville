@@ -9,9 +9,9 @@ export const Log: React.FC<LogProps> = ({ logs }) => {
   const reversedLogs = [...logs].reverse();
 
   return (
-    <div className="flex-1 overflow-y-auto bg-slate-50 rounded-xl border border-slate-200 p-4 space-y-2">
+    <div className="flex-1 overflow-y-auto space-y-2">
       {reversedLogs.map((log, i) => (
-        <div key={logs.length - 1 - i} className="text-sm text-slate-700 pb-2 border-b border-slate-100 last:border-0">
+        <div key={logs.length - 1 - i} className="text-sm text-slate-300 pb-2 border-b border-white/5 last:border-0">
           {log}
         </div>
       ))}

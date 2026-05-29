@@ -85,6 +85,13 @@ export interface GameState {
   hasRerolled: boolean;
   extraTurn: boolean;
   globalWarming: number;
+  // Online Multiplayer Fields
+  isOnline?: boolean;
+  roomCode?: string;
+  myPlayerId?: string;
+  hostId?: string;
+  playersList?: { id: string; name: string; isHost: boolean; isConnected: boolean }[];
+  onlineStatus?: 'lobby' | 'playing' | 'finished';
 }
 
 export interface GameAction {

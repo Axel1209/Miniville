@@ -2,10 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Board } from './components/Board';
 import { SetupScreen } from './components/SetupScreen';
 import { RulesModal } from './components/RulesModal';
+import { OnlineScreen } from './components/OnlineScreen';
 import { playAITurn } from './game/ai';
 import { createInitialState } from './game/engine';
 import { GameState } from './game/types';
-import { BookOpen } from 'lucide-react';
+import { 
+  apiSetPlayerStatus, 
+  apiUpdateGameState, 
+  apiSubscribeToRoom 
+} from './game/supabase';
+import { BookOpen, LogOut, Radio } from 'lucide-react';
+import { motion } from 'motion/react';
 
 export default function App() {
   const [gameState, setGameState] = useState<GameState | null>(null);
@@ -14,39 +21,121 @@ export default function App() {
     return !localStorage.getItem('minivilles_eco_rules_seen');
   });
 
+  // Online Multiplayer States
+  const [isOnlineMode, setIsOnlineMode] = useState(false);
+  const [myPlayerId, setMyPlayerId] = useState('');
+  const [roomCode, setRoomCode] = useState('');
+  const [roomChat, setRoomChat] = useState<any[]>([]);
+  const [playersList, setPlayersList] = useState<any[]>([]);
+
   const handleCloseRules = () => {
     localStorage.setItem('minivilles_eco_rules_seen', 'true');
     setShowRules(false);
   };
 
+  // --- LOCAL SAVE & AI TRIGGER EFFECT ---
   useEffect(() => {
-    const saved = localStorage.getItem('miniville_save');
-    if (saved) {
-      try {
-        setGameState(JSON.parse(saved));
-      } catch (e) {
-        console.error('Failed to load save', e);
+    // Only load local save if NOT in online mode on mount
+    if (!isOnlineMode) {
+      const saved = localStorage.getItem('miniville_save');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (!parsed.isOnline) {
+            setGameState(parsed);
+          }
+        } catch (e) {
+          console.error('Failed to load save', e);
+        }
       }
     }
-  }, []);
+  }, [isOnlineMode]);
 
   useEffect(() => {
     if (gameState) {
-      localStorage.setItem('miniville_save', JSON.stringify(gameState));
-      
-      // Trigger AI turn if it's AI's turn
-      const activePlayer = gameState.players[gameState.currentPlayerIndex];
-      if (activePlayer.isAI && !gameState.winner) {
-        const timeout = setTimeout(() => {
-          setGameState(playAITurn(gameState));
-        }, 1000); // 1 second delay for AI to make it visible
-        return () => clearTimeout(timeout);
+      // Save local singleplayer games to localStorage
+      if (!gameState.isOnline) {
+        localStorage.setItem('miniville_save', JSON.stringify(gameState));
+        
+        // Trigger AI turn if it's AI's turn
+        const activePlayer = gameState.players[gameState.currentPlayerIndex];
+        if (activePlayer.isAI && !gameState.winner) {
+          const timeout = setTimeout(() => {
+            setGameState(playAITurn(gameState));
+          }, 1000); // 1 second delay for AI to make it visible
+          return () => clearTimeout(timeout);
+        }
       }
     }
   }, [gameState]);
 
+  // --- ONLINE SUBSCRIPTION EFFECT ---
+  // Sync the game state and chat in real-time when in an online game
+  useEffect(() => {
+    if (!isOnlineMode || !roomCode || !gameState?.isOnline) return;
+
+    const unsubscribe = apiSubscribeToRoom(roomCode, (roomData) => {
+      if (roomData.game_state) {
+        // Direct setGameState avoids triggering the custom handleSetGameState wrapper (no loop)
+        setGameState(roomData.game_state);
+      }
+      if (roomData.chat) {
+        setRoomChat(roomData.chat);
+      }
+      if (roomData.players) {
+        setPlayersList(roomData.players);
+      }
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isOnlineMode, roomCode, gameState?.isOnline]);
+
+  // --- ONLINE STATUS TRACKER EFFECT ---
+  // Periodically notifies that this player is connected / disconnected (visibility API)
+  useEffect(() => {
+    if (!gameState?.isOnline || !roomCode || !myPlayerId) return;
+
+    // Set online
+    apiSetPlayerStatus(roomCode, myPlayerId, true);
+
+    const handleBeforeUnload = () => {
+      apiSetPlayerStatus(roomCode, myPlayerId, false);
+    };
+
+    const handleVisibilityChange = () => {
+      const isConnected = document.visibilityState === 'visible';
+      apiSetPlayerStatus(roomCode, myPlayerId, isConnected);
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      apiSetPlayerStatus(roomCode, myPlayerId, false);
+    };
+  }, [gameState?.isOnline, roomCode, myPlayerId]);
+
   const handleStartGame = (players: string[], aiCount: number) => {
     setGameState(createInitialState(players, aiCount));
+  };
+
+  const handleOnlineGameStarted = (onlineState: GameState, pId: string, code: string) => {
+    setMyPlayerId(pId);
+    setRoomCode(code);
+    setIsOnlineMode(true);
+    setGameState(onlineState);
+  };
+
+  // Wrapper setter passed to components to push changes to Supabase
+  const handleSetGameState = (newState: GameState) => {
+    setGameState(newState);
+    if (newState.isOnline && roomCode) {
+      apiUpdateGameState(roomCode, newState);
+    }
   };
 
   const handleReset = () => {
@@ -54,8 +143,18 @@ export default function App() {
   };
 
   const confirmReset = () => {
-    localStorage.removeItem('miniville_save');
-    setGameState(null);
+    if (gameState?.isOnline && roomCode) {
+      // In online mode, leaving exits the game entirely
+      apiSetPlayerStatus(roomCode, myPlayerId, false);
+      setGameState(null);
+      setIsOnlineMode(false);
+      setRoomCode('');
+      setRoomChat([]);
+      setPlayersList([]);
+    } else {
+      localStorage.removeItem('miniville_save');
+      setGameState(null);
+    }
     setIsConfirmingReset(false);
   };
 
@@ -63,65 +162,118 @@ export default function App() {
     setIsConfirmingReset(false);
   };
 
+  // Render Online Lobby choice Screen
+  if (isOnlineMode && !gameState) {
+    return (
+      <>
+        <OnlineScreen onBack={() => setIsOnlineMode(false)} onGameStarted={handleOnlineGameStarted} />
+        {showRules && <RulesModal onClose={handleCloseRules} />}
+      </>
+    );
+  }
+
+  // Render standard offline Setup Screen
   if (!gameState) {
     return (
       <>
-        <SetupScreen onStart={handleStartGame} onShowRules={() => setShowRules(true)} />
+        <SetupScreen 
+          onStart={handleStartGame} 
+          onShowRules={() => setShowRules(true)} 
+          onPlayOnline={() => setIsOnlineMode(true)} 
+        />
         {showRules && <RulesModal onClose={handleCloseRules} />}
       </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900 font-sans flex flex-col relative">
-      <header className="bg-white shadow-sm p-4 flex justify-between items-center z-10">
-        <h1 className="text-2xl font-bold text-indigo-600">Miniville</h1>
+    <div className="min-h-screen bg-transparent text-slate-200 font-sans flex flex-col relative">
+      <header className="backdrop-blur-md bg-white/5 border-b border-white/10 p-4 flex justify-between items-center z-10">
+        <div className="flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-blue-400 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] tracking-tight">Miniville</h1>
+          {gameState.isOnline && (
+            <div className="flex items-center gap-1.5 px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-xs font-semibold text-blue-300 shadow-[0_0_10px_rgba(59,130,246,0.1)]">
+              <Radio size={12} className="animate-pulse" />
+              <span>Salon : {roomCode}</span>
+            </div>
+          )}
+        </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={() => setShowRules(true)}
-            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors"
+            className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-300 hover:text-blue-200 hover:bg-white/10 rounded-md transition-colors"
           >
             <BookOpen size={18} />
             <span className="hidden sm:inline">Règles</span>
           </button>
           <button 
             onClick={handleReset}
-            className="px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md transition-colors"
+            className="flex items-center gap-1 px-4 py-2 text-sm text-red-400 hover:bg-white/10 rounded-md transition-colors cursor-pointer"
           >
-            Recommencer
+            {gameState.isOnline ? (
+              <>
+                <LogOut size={16} />
+                <span>Quitter</span>
+              </>
+            ) : (
+              <span>Recommencer</span>
+            )}
           </button>
         </div>
       </header>
       
-      <main className="flex-1 overflow-hidden relative z-0">
-        <Board gameState={gameState} setGameState={setGameState} />
-      </main>
+      <motion.main 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex-1 overflow-hidden relative z-0"
+      >
+        <Board 
+          gameState={gameState} 
+          setGameState={handleSetGameState}
+          onlineContext={{
+            myPlayerId,
+            roomCode,
+            roomChat,
+            playersList,
+          }}
+        />
+      </motion.main>
 
       {showRules && <RulesModal onClose={handleCloseRules} />}
 
       {isConfirmingReset && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-xl">
-            <h2 className="text-lg font-bold text-slate-800 mb-2">Recommencer la partie ?</h2>
-            <p className="text-slate-600 mb-6 text-sm">Êtes-vous sûr de vouloir recommencer ? Toute votre progression sera perdue.</p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[110] p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-[#0f172a]/90 backdrop-blur-xl border border-white/10 rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+          >
+            <h2 className="text-lg font-bold text-white mb-2 tracking-tight">
+              {gameState.isOnline ? 'Quitter la partie en ligne ?' : 'Recommencer la partie ?'}
+            </h2>
+            <p className="text-slate-400 mb-6 text-sm">
+              {gameState.isOnline 
+                ? 'Êtes-vous sûr de vouloir quitter le salon ? La partie continuera pour les autres joueurs.'
+                : 'Êtes-vous sûr de vouloir recommencer ? Toute votre progression sera perdue.'}
+            </p>
             <div className="flex justify-end gap-3">
               <button 
                 onClick={cancelReset}
-                className="px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
                 Annuler
               </button>
               <button 
                 onClick={confirmReset}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors"
+                className="px-4 py-2 text-sm font-medium text-red-400 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/40 rounded-lg transition-colors shadow-[0_0_10px_rgba(239,68,68,0.1)]"
               >
-                Recommencer
+                {gameState.isOnline ? 'Quitter' : 'Recommencer'}
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
   );
 }
-
