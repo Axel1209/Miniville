@@ -60,16 +60,21 @@ export const playAITurn = (state: GameState): GameState => {
     }
 
     const buyOrder = [
+      CardId.SIEGE_EELV,
+      CardId.PISTE_SKI_INDOOR,
       CardId.CENTRALE_NUCLEAIRE,
       CardId.RAFFINERIE,
       CardId.AEROPORT,
       CardId.METHANISATION,
       CardId.BIOCOOP,
+      CardId.PETIT_PAR_SERIN,
       CardId.PANNEAUX_SOLAIRES,
       CardId.MAISON_AUTONOME,
       CardId.USINE_MICHELIN,
       CardId.LE_SUN,
-      CardId.PEAGE_AUTOROUTE,
+      CardId.LE_FOYER,
+      CardId.LES_SUBSISTANCES,
+      CardId.ATELIER_REPARATION_VELO,
       CardId.PUITS_PETROLE,
       CardId.EOLIENNE,
       CardId.AMAP,
@@ -81,6 +86,10 @@ export const playAITurn = (state: GameState): GameState => {
       if (activePlayer.coins >= CARDS[cardId].cost && currentState.supply[cardId] > 0) {
         // Don't buy more than 1 purple card
         if (CARDS[cardId].color === CardColor.PURPLE && (activePlayer.cards[cardId] || 0) > 0) {
+           continue;
+        }
+        // Don't try to buy Piste de ski indoor if locked
+        if (cardId === CardId.PISTE_SKI_INDOOR && (currentState.globalWarming || 0) <= 2.0) {
            continue;
         }
         return buyCard(currentState, cardId);

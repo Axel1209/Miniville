@@ -14,7 +14,7 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [CardId.COMPOST]: 1,
         [CardId.AMAP]: 1,
         [CardId.EXTRACTION_CAOUTCHOUC]: 0,
-        [CardId.PEAGE_AUTOROUTE]: 0,
+        [CardId.ATELIER_REPARATION_VELO]: 0,
         [CardId.MAISON_AUTONOME]: 0,
         [CardId.PUITS_PETROLE]: 0,
         [CardId.CENTRALE_NUCLEAIRE]: 0,
@@ -26,6 +26,11 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [CardId.EOLIENNE]: 0,
         [CardId.USINE_MICHELIN]: 0,
         [CardId.PANNEAUX_SOLAIRES]: 0,
+        [CardId.SIEGE_EELV]: 0,
+        [CardId.LES_SUBSISTANCES]: 0,
+        [CardId.LE_FOYER]: 0,
+        [CardId.PISTE_SKI_INDOOR]: 0,
+        [CardId.PETIT_PAR_SERIN]: 0,
       },
       monuments: {
         [MonumentId.GARE]: false,
@@ -47,7 +52,7 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [CardId.COMPOST]: 1,
         [CardId.AMAP]: 1,
         [CardId.EXTRACTION_CAOUTCHOUC]: 0,
-        [CardId.PEAGE_AUTOROUTE]: 0,
+        [CardId.ATELIER_REPARATION_VELO]: 0,
         [CardId.MAISON_AUTONOME]: 0,
         [CardId.PUITS_PETROLE]: 0,
         [CardId.CENTRALE_NUCLEAIRE]: 0,
@@ -59,6 +64,11 @@ export const createInitialState = (playerNames: string[], aiCount: number): Game
         [CardId.EOLIENNE]: 0,
         [CardId.USINE_MICHELIN]: 0,
         [CardId.PANNEAUX_SOLAIRES]: 0,
+        [CardId.SIEGE_EELV]: 0,
+        [CardId.LES_SUBSISTANCES]: 0,
+        [CardId.LE_FOYER]: 0,
+        [CardId.PISTE_SKI_INDOOR]: 0,
+        [CardId.PETIT_PAR_SERIN]: 0,
       },
       monuments: {
         [MonumentId.GARE]: false,
@@ -155,24 +165,45 @@ const processActivations = (state: GameState): GameState => {
     newState.logs.push(`⚠️ Le réchauffement climatique augmente de ${increment.toFixed(1)}°C ! (${newState.globalWarming.toFixed(1)}°C)`);
   }
 
-  const isRCMalusActive = (newState.globalWarming || 0) >= 1.95; // using 1.95 to avoid float precision issues
-
   // RED CARDS (Counter-clockwise from active player)
   for (let i = 1; i < newState.players.length; i++) {
     const targetIdx = (newState.currentPlayerIndex - i + newState.players.length) % newState.players.length;
     const targetPlayer = newState.players[targetIdx];
     
-    // Péage autoroute
-    if ((targetPlayer.cards[CardId.PEAGE_AUTOROUTE] || 0) > 0 && CARDS[CardId.PEAGE_AUTOROUTE].activations.includes(total)) {
-      const amount = Math.min(activePlayer.coins, 2 * (targetPlayer.cards[CardId.PEAGE_AUTOROUTE] || 0));
+    // Atelier de réparation de vélo
+    if ((targetPlayer.cards[CardId.ATELIER_REPARATION_VELO] || 0) > 0 && total === 3) {
+      const amount = Math.min(activePlayer.coins, 2 * (targetPlayer.cards[CardId.ATELIER_REPARATION_VELO] || 0));
       if (amount > 0) {
         activePlayer.coins -= amount;
         targetPlayer.coins += amount;
-        newState.logs.push(`${targetPlayer.name} prend ${amount} pièce(s) à ${activePlayer.name} (Péage autoroute).`);
+        newState.logs.push(`${targetPlayer.name} prend ${amount} pièce(s) à ${activePlayer.name} (Atelier de réparation de vélo).`);
+      }
+    }
+    // Les subsistances
+    if ((targetPlayer.cards[CardId.LES_SUBSISTANCES] || 0) > 0 && total === 5) {
+      const amount = Math.min(activePlayer.coins, 2 * (targetPlayer.cards[CardId.LES_SUBSISTANCES] || 0));
+      if (amount > 0) {
+        activePlayer.coins -= amount;
+        targetPlayer.coins += amount;
+        newState.logs.push(`${targetPlayer.name} prend ${amount} pièce(s) à ${activePlayer.name} (Les subsistances).`);
+      }
+    }
+    // Le foyer
+    if ((targetPlayer.cards[CardId.LE_FOYER] || 0) > 0 && total === 7) {
+      const activeHasFoyer = (activePlayer.cards[CardId.LE_FOYER] || 0) > 0;
+      if (!activeHasFoyer) {
+        const amount = Math.min(activePlayer.coins, 3 * (targetPlayer.cards[CardId.LE_FOYER] || 0));
+        if (amount > 0) {
+          activePlayer.coins -= amount;
+          targetPlayer.coins += amount;
+          newState.logs.push(`${targetPlayer.name} prend ${amount} pièce(s) à ${activePlayer.name} (Le foyer).`);
+        }
+      } else {
+        newState.logs.push(`🛡️ Immunité mutuelle : aucun transfert pour Le foyer entre ${activePlayer.name} et ${targetPlayer.name}.`);
       }
     }
     // Le Sun
-    if ((targetPlayer.cards[CardId.LE_SUN] || 0) > 0 && CARDS[CardId.LE_SUN].activations.includes(total)) {
+    if ((targetPlayer.cards[CardId.LE_SUN] || 0) > 0 && total === 9) {
       const amount = Math.min(activePlayer.coins, 3 * (targetPlayer.cards[CardId.LE_SUN] || 0));
       if (amount > 0) {
         activePlayer.coins -= amount;
@@ -184,14 +215,18 @@ const processActivations = (state: GameState): GameState => {
 
   // BLUE CARDS (All players)
   newState.players.forEach(player => {
+    // Check if player has EELV which completely bypasses RC maluses
+    const playerHasEELV = (player.cards[CardId.SIEGE_EELV] || 0) > 0;
+    const isRCMalusActiveForPlayer = !playerHasEELV && (newState.globalWarming || 0) >= 1.95;
+
     const blueCards = [CardId.COMPOST, CardId.EXTRACTION_CAOUTCHOUC, CardId.EOLIENNE, CardId.PUITS_PETROLE, CardId.PANNEAUX_SOLAIRES];
     blueCards.forEach(cardId => {
       if ((player.cards[cardId] || 0) > 0 && CARDS[cardId].activations.includes(total)) {
         let gain = 0;
         if (cardId === CardId.COMPOST) gain = 2;
-        else if (cardId === CardId.EXTRACTION_CAOUTCHOUC) gain = isRCMalusActive ? 0 : 1;
+        else if (cardId === CardId.EXTRACTION_CAOUTCHOUC) gain = isRCMalusActiveForPlayer ? 0 : 1;
         else if (cardId === CardId.EOLIENNE) gain = 3;
-        else if (cardId === CardId.PUITS_PETROLE) gain = isRCMalusActive ? 1 : 2;
+        else if (cardId === CardId.PUITS_PETROLE) gain = isRCMalusActiveForPlayer ? 1 : 2;
         else if (cardId === CardId.PANNEAUX_SOLAIRES) gain = 3;
         
         const totalGain = gain * (player.cards[cardId] || 0);
@@ -206,19 +241,22 @@ const processActivations = (state: GameState): GameState => {
   });
 
   // GREEN CARDS (Active player only)
-  const greenCards = [CardId.AMAP, CardId.MAISON_AUTONOME, CardId.BIOCOOP, CardId.METHANISATION, CardId.USINE_MICHELIN, CardId.RAFFINERIE];
+  const activeHasEELV = (activePlayer.cards[CardId.SIEGE_EELV] || 0) > 0;
+  const isRCMalusActive3ForActive = !activeHasEELV && (newState.globalWarming || 0) > 3.05;
+
+  const greenCards = [CardId.AMAP, CardId.MAISON_AUTONOME, CardId.BIOCOOP, CardId.METHANISATION, CardId.USINE_MICHELIN, CardId.RAFFINERIE, CardId.PETIT_PAR_SERIN];
   greenCards.forEach(cardId => {
     if ((activePlayer.cards[cardId] || 0) > 0 && CARDS[cardId].activations.includes(total)) {
       let gain = 0;
       const count = activePlayer.cards[cardId] || 0;
-      const isRCMalusActive3 = (newState.globalWarming || 0) > 3.05;
 
       if (cardId === CardId.AMAP) gain = 1 * count;
       else if (cardId === CardId.MAISON_AUTONOME) gain = 2 * count;
       else if (cardId === CardId.BIOCOOP) gain = 3 * (activePlayer.cards[CardId.AMAP] || 0) * count;
       else if (cardId === CardId.METHANISATION) gain = 3 * (activePlayer.cards[CardId.COMPOST] || 0) * count;
-      else if (cardId === CardId.USINE_MICHELIN) gain = (isRCMalusActive3 ? 1 : 2) * (activePlayer.cards[CardId.EXTRACTION_CAOUTCHOUC] || 0) * count;
-      else if (cardId === CardId.RAFFINERIE) gain = (isRCMalusActive3 ? 1 : 3) * (activePlayer.cards[CardId.PUITS_PETROLE] || 0) * count;
+      else if (cardId === CardId.USINE_MICHELIN) gain = (isRCMalusActive3ForActive ? 1 : 2) * (activePlayer.cards[CardId.EXTRACTION_CAOUTCHOUC] || 0) * count;
+      else if (cardId === CardId.RAFFINERIE) gain = (isRCMalusActive3ForActive ? 1 : 3) * (activePlayer.cards[CardId.PUITS_PETROLE] || 0) * count;
+      else if (cardId === CardId.PETIT_PAR_SERIN) gain = 3 * count;
 
       if (gain > 0) {
         activePlayer.coins += gain;
@@ -236,7 +274,7 @@ const processActivations = (state: GameState): GameState => {
         [CardId.COMPOST]: 1,
         [CardId.AMAP]: 1,
         [CardId.EXTRACTION_CAOUTCHOUC]: 0,
-        [CardId.PEAGE_AUTOROUTE]: 0,
+        [CardId.ATELIER_REPARATION_VELO]: 0,
         [CardId.MAISON_AUTONOME]: 0,
         [CardId.PUITS_PETROLE]: 0,
         [CardId.CENTRALE_NUCLEAIRE]: 0,
@@ -248,6 +286,11 @@ const processActivations = (state: GameState): GameState => {
         [CardId.EOLIENNE]: 0,
         [CardId.USINE_MICHELIN]: 0,
         [CardId.PANNEAUX_SOLAIRES]: 0,
+        [CardId.SIEGE_EELV]: 0,
+        [CardId.LES_SUBSISTANCES]: 0,
+        [CardId.LE_FOYER]: 0,
+        [CardId.PISTE_SKI_INDOOR]: 0,
+        [CardId.PETIT_PAR_SERIN]: 0,
       };
       activePlayer.monuments = {
         [MonumentId.GARE]: false,
@@ -274,6 +317,10 @@ const processActivations = (state: GameState): GameState => {
           }
           if ((neighbor.cards[CardId.AEROPORT] || 0) > 0) {
             neighbor.cards[CardId.AEROPORT] = 0;
+            destroyedSomething = true;
+          }
+          if ((neighbor.cards[CardId.SIEGE_EELV] || 0) > 0) {
+            neighbor.cards[CardId.SIEGE_EELV] = 0;
             destroyedSomething = true;
           }
           if (destroyedSomething) {
@@ -304,11 +351,19 @@ const processActivations = (state: GameState): GameState => {
       newState.logs.push(`${activePlayer.name} gagne ${totalGained} pièce(s) avec l'Aéroport.`);
     }
     
-    if (isRCMalusActive) {
+    const isRCMalusActiveForActive = !activeHasEELV && (newState.globalWarming || 0) >= 1.95;
+    if (isRCMalusActiveForActive) {
       const tax = Math.min(activePlayer.coins, 5);
       activePlayer.coins -= tax;
       newState.logs.push(`✈️ Taxe carbone ! ${activePlayer.name} paie ${tax} pièce(s) pour l'Aéroport.`);
     }
+  }
+
+  // Piste de ski indoor (trigger 8)
+  if ((activePlayer.cards[CardId.PISTE_SKI_INDOOR] || 0) > 0 && total === 8) {
+    const count = activePlayer.cards[CardId.PISTE_SKI_INDOOR] || 0;
+    activePlayer.coins += 5 * count;
+    newState.logs.push(`${activePlayer.name} gagne ${5 * count} pièce(s) avec la Piste de ski indoor.`);
   }
 
   newState.turnState = TurnState.BUY_PHASE;
@@ -327,6 +382,11 @@ export const buyCard = (state: GameState, cardId: CardId | null): GameState => {
       if (card.color === CardColor.PURPLE && (activePlayer.cards[cardId] || 0) > 0) {
         // Cannot buy more than 1 of each purple card
         return state;
+      }
+
+      // Check Piste de ski indoor purchase requirement (globalRC > 2.0)
+      if (cardId === CardId.PISTE_SKI_INDOOR && (state.globalWarming || 0) <= 2.0) {
+        return state; // Restricted purchase
       }
       
       activePlayer.coins -= card.cost;

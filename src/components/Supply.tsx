@@ -35,7 +35,8 @@ export const Supply: React.FC<SupplyProps> = ({ gameState, setGameState, isMyTur
     const isAvailable = count > 0;
     const isPurple = card.color === 'PURPLE';
     const hasPurple = activePlayer.cards[cardId] > 0;
-    const canBuy = isBuyPhase && canAfford && isAvailable && (!isPurple || !hasPurple);
+    const isPisteSkiIndoorLocked = cardId === CardId.PISTE_SKI_INDOOR && (gameState.globalWarming || 0) <= 2.0;
+    const canBuy = isBuyPhase && canAfford && isAvailable && (!isPurple || !hasPurple) && !isPisteSkiIndoorLocked;
     
     const Icon = (Icons as any)[card.icon] || Icons.Home;
 
@@ -78,7 +79,13 @@ export const Supply: React.FC<SupplyProps> = ({ gameState, setGameState, isMyTur
         <p className="text-[10px] text-slate-400 leading-tight flex-1 mb-2">{card.description}</p>
         
         <div className="mt-auto pt-2 border-t border-white/10 flex justify-between items-center w-full">
-          <span className="text-xs font-medium text-slate-500">Reste: {count}</span>
+          <span className="text-xs font-medium text-slate-500">
+            {isPisteSkiIndoorLocked ? (
+              <span className="text-[10px] font-bold text-rose-400">Bloqué (RC &le; 2.0°C)</span>
+            ) : (
+              `Reste: ${count}`
+            )}
+          </span>
           {canBuy && <span className="text-xs font-bold text-blue-400 drop-shadow-[0_0_5px_rgba(59,130,246,0.5)]">Acheter</span>}
         </div>
       </motion.button>
