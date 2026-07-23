@@ -254,7 +254,7 @@ const processActivations = (state: GameState): GameState => {
       const count = activePlayer.cards[cardId] || 0;
 
       if (cardId === CardId.AMAP) gain = 1 * count;
-      else if (cardId === CardId.MAISON_AUTONOME) gain = 2 * count;
+      else if (cardId === CardId.MAISON_AUTONOME) gain = 3 * count;
       else if (cardId === CardId.BIOCOOP) gain = 3 * (activePlayer.cards[CardId.AMAP] || 0) * count;
       else if (cardId === CardId.METHANISATION) gain = 3 * (activePlayer.cards[CardId.COMPOST] || 0) * count;
       else if (cardId === CardId.USINE_MICHELIN) gain = (isRCMalusActive3ForActive ? 1 : 2) * (activePlayer.cards[CardId.EXTRACTION_CAOUTCHOUC] || 0) * count;

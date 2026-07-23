@@ -45,7 +45,7 @@ export const CARDS: Record<CardId, Card> = {
     color: CardColor.GREEN,
     activations: [4],
     icon: 'Home',
-    description: 'Recevez 2 pièces de la banque, uniquement pendant votre tour.',
+    description: 'Recevez 3 pièces de la banque, uniquement pendant votre tour.',
   },
   [CardId.PUITS_PETROLE]: {
     id: CardId.PUITS_PETROLE,
@@ -198,21 +198,21 @@ export const MONUMENTS: Record<MonumentId, Monument> = {
   [MonumentId.CENTRE_COMMERCIAL]: {
     id: MonumentId.CENTRE_COMMERCIAL,
     name: 'Boîte de nuit bolivienne',
-    cost: 15,
+    cost: 10,
     description: 'Si vous faites un double, vous rejouez un tour après celui-ci.',
     icon: 'Music',
   },
   [MonumentId.PARC_ATTRACTIONS]: {
     id: MonumentId.PARC_ATTRACTIONS,
     name: "P'tite cafet",
-    cost: 30,
+    cost: 20,
     description: 'Une fois par tour, vous pouvez relancer les dés.',
     icon: 'Coffee',
   },
   [MonumentId.TOUR_RADIO]: {
     id: MonumentId.TOUR_RADIO,
     name: 'Domaine de Damian',
-    cost: 50,
+    cost: 40,
     description: 'Aucun effet.',
     icon: 'Home',
   },
