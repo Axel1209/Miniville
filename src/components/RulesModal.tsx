@@ -8,13 +8,13 @@ interface RulesModalProps {
 export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 sm:p-6">
-      <div className="bg-[#0f172a] border border-white/10 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-[#0f172a] border border-white/10 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         
         {/* Header */}
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-white/10 bg-[#0f172a]">
           <div className="flex items-center gap-3 text-blue-400">
             <BookOpen size={24} className="text-blue-500" />
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Règles du Jeu</h2>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Règles du Jeu & Spécifications</h2>
           </div>
           <button 
             onClick={onClose}
@@ -37,10 +37,10 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               Vous êtes le maire d'une ville en plein développement. Votre objectif est d'être le <strong>premier joueur à construire ses 4 Monuments</strong> :
             </p>
             <ul className="list-disc list-inside space-y-1 ml-2 text-sm">
-              <li><strong>Mont Saint Michel</strong> (Coût : 5 pièces)</li>
-              <li><strong>Boite de nuit Bolivienne</strong> (Coût : 10 pièces)</li>
-              <li><strong>P'tite Kafet</strong> (Coût : 20 pièces)</li>
-              <li><strong>Domaine de Damian</strong> (Coût : 40 pièces)</li>
+              <li><strong>Mont Saint Michel</strong> (Coût : 5 pièces) — Permet de choisir de lancer 1 dé ou 2 dés.</li>
+              <li><strong>Boîte de nuit Bolivienne</strong> (Coût : 10 pièces) — Si double aux dés, rejouez un tour.</li>
+              <li><strong>P'tite Ka'fête</strong> (Coût : 20 pièces) — Une fois par tour, vous pouvez relancer vos dés.</li>
+              <li><strong>Domaine de Damian</strong> (Coût : 40 pièces) — Condition finale de victoire.</li>
             </ul>
           </section>
 
@@ -50,15 +50,15 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               <Home size={20} className="text-emerald-400" />
               Déroulement d'un tour
             </h3>
-            <ol className="list-decimal list-inside space-y-3 ml-2">
+            <ol className="list-decimal list-inside space-y-3 ml-2 text-sm">
               <li>
-                <strong>Lancer les dés :</strong> Lancez 1 dé. Si vous avez construit le <em>Mont Saint Michel</em>, vous pouvez choisir de lancer 1 ou 2 dés.
+                <strong>Lancer les dés :</strong> Lancez 1 dé (ou 2 dés si vous possèdez le Mont Saint Michel).
               </li>
               <li>
-                <strong>Gagner des revenus :</strong> Le résultat des dés active les établissements correspondants (le numéro en haut à gauche des cartes).
+                <strong>Gagner des revenus :</strong> Le résultat des dés active les établissements correspondants.
               </li>
               <li>
-                <strong>Construction :</strong> Vous pouvez acheter <strong>un seul</strong> établissement ou monument par tour, si vous avez assez de pièces.
+                <strong>Construction :</strong> Achetez au maximum 1 établissement ou 1 monument si vous avez assez de pièces.
               </li>
             </ol>
           </section>
@@ -69,22 +69,22 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               <Coins size={20} className="text-yellow-400" />
               Les types d'établissements
             </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
               <div className="bg-blue-500/10 border border-blue-500/30 p-3 rounded-xl">
-                <h4 className="font-bold text-blue-300 mb-1">Bleu (Primaire)</h4>
-                <p className="text-sm text-blue-100">Revenus pendant le tour de <strong className="text-white">n'importe quel joueur</strong>.</p>
+                <h4 className="font-bold text-blue-300 mb-1">🔵 Bleu (Primaire)</h4>
+                <p className="text-blue-100">Revenus pendant le tour de <strong className="text-white">n'importe quel joueur</strong>.</p>
               </div>
               <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-xl">
-                <h4 className="font-bold text-emerald-300 mb-1">Vert (Secondaire)</h4>
-                <p className="text-sm text-emerald-100">Revenus <strong className="text-white">uniquement pendant votre tour</strong>.</p>
+                <h4 className="font-bold text-emerald-300 mb-1">🟢 Vert (Secondaire)</h4>
+                <p className="text-emerald-100">Revenus <strong className="text-white">uniquement pendant votre tour</strong>.</p>
               </div>
               <div className="bg-rose-500/10 border border-rose-500/30 p-3 rounded-xl">
-                <h4 className="font-bold text-rose-300 mb-1">Rouge (Tertiaire)</h4>
-                <p className="text-sm text-rose-100">Prenez des pièces au joueur qui a lancé les dés.</p>
+                <h4 className="font-bold text-rose-300 mb-1">🔴 Rouge (Tertiaire)</h4>
+                <p className="text-rose-100">Prenez des pièces au joueur qui a lancé les dés.</p>
               </div>
               <div className="bg-purple-500/10 border border-purple-500/30 p-3 rounded-xl">
-                <h4 className="font-bold text-purple-300 mb-1">Violet (Majeur)</h4>
-                <p className="text-sm text-purple-100">Effets puissants, uniquement pendant votre tour. Limité à 1 exemplaire de chaque par joueur.</p>
+                <h4 className="font-bold text-purple-300 mb-1">🟣 Violet (Majeur)</h4>
+                <p className="text-purple-100">Effets puissants, uniquement pendant votre tour. Limité à 1 exemplaire par joueur.</p>
               </div>
             </div>
           </section>
@@ -96,15 +96,14 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               Mécanique Spéciale : Réchauffement Climatique (RC)
             </h3>
             <p className="text-orange-200 text-sm mb-3">
-              Certaines cartes polluantes (avec le symbole ⚠️) augmentent le Réchauffement Climatique global de <strong className="text-white">0.1°C</strong> à chaque activation.
+              Chaque activation d'une carte polluante (⚠️) augmente le Réchauffement Climatique global de <strong className="text-white">+0.1°C</strong>.
             </p>
             <ul className="list-disc list-inside text-sm text-orange-200 space-y-2">
               <li>
-                Le seuil de déclenchement du malus s'enclenche selon le nombre de joueurs :
-                <strong className="text-white"> +2.0°C</strong> à 2 joueurs, <strong className="text-white">+3.0°C</strong> à 3 joueurs, et <strong className="text-white">+4.0°C</strong> à 4 joueurs.
+                Le seuil critique s'active à : <strong className="text-white">+2.0°C</strong> (2 joueurs), <strong className="text-white">+3.0°C</strong> (3 joueurs), <strong className="text-white">+4.0°C</strong> (4 joueurs).
               </li>
-              <li><em className="text-orange-300">Exemple :</em> L'Extraction de Caoutchouc ne rapporte plus rien, et l'Aéroport vous coûte une taxe carbone.</li>
-              <li><strong className="text-white">Attention à la Centrale Nucléaire :</strong> Elle rapporte beaucoup, mais si elle est activée 2 fois de suite, votre ville explose (vous perdez tout) et les bâtiments 6 de vos voisins sont détruits !</li>
+              <li>Au-delà de ce seuil, les malus RC s'appliquent immédiatement à tous les joueurs (ex: Extraction caoutchouc = 0 pièce, Usine Michelin / Raffinerie = 1 pièce au total).</li>
+              <li><strong className="text-white">Siège EEVL :</strong> Annule tous les malus du Réchauffement Climatique pour son propriétaire.</li>
             </ul>
           </section>
 
@@ -116,7 +115,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
             onClick={onClose}
             className="px-6 py-2.5 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-xl transition-all shadow-[0_0_15px_rgba(59,130,246,0.3)] hover:shadow-[0_0_20px_rgba(59,130,246,0.5)] border border-blue-400/30"
           >
-            J'ai compris, jouer !
+            Fermer les règles
           </button>
         </div>
       </div>
