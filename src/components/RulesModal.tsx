@@ -37,10 +37,10 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               Vous êtes le maire d'une ville en plein développement. Votre objectif est d'être le <strong>premier joueur à construire ses 4 Monuments</strong> :
             </p>
             <ul className="list-disc list-inside space-y-1 ml-2 text-sm">
-              <li><strong>Aire de covoiturage</strong> (Coût : 5 pièces)</li>
-              <li><strong>Siège EELV</strong> (Coût : 15 pièces)</li>
-              <li><strong>Musée des Confluences</strong> (Coût : 30 pièces)</li>
-              <li><strong>Mont Saint-Michel</strong> (Coût : 50 pièces)</li>
+              <li><strong>Mont Saint Michel</strong> (Coût : 5 pièces)</li>
+              <li><strong>Boite de nuit Bolivienne</strong> (Coût : 10 pièces)</li>
+              <li><strong>P'tite Kafet</strong> (Coût : 20 pièces)</li>
+              <li><strong>Domaine de Damian</strong> (Coût : 40 pièces)</li>
             </ul>
           </section>
 
@@ -52,7 +52,7 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
             </h3>
             <ol className="list-decimal list-inside space-y-3 ml-2">
               <li>
-                <strong>Lancer les dés :</strong> Lancez 1 dé. Si vous avez construit l'<em>Aire de covoiturage</em>, vous pouvez choisir de lancer 1 ou 2 dés.
+                <strong>Lancer les dés :</strong> Lancez 1 dé. Si vous avez construit le <em>Mont Saint Michel</em>, vous pouvez choisir de lancer 1 ou 2 dés.
               </li>
               <li>
                 <strong>Gagner des revenus :</strong> Le résultat des dés active les établissements correspondants (le numéro en haut à gauche des cartes).
@@ -99,7 +99,10 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
               Certaines cartes polluantes (avec le symbole ⚠️) augmentent le Réchauffement Climatique global de <strong className="text-white">0.1°C</strong> à chaque activation.
             </p>
             <ul className="list-disc list-inside text-sm text-orange-200 space-y-2">
-              <li>Si le RC atteint <strong className="text-white">2.0°C</strong>, des malus s'appliquent à tous les joueurs.</li>
+              <li>
+                Le seuil de déclenchement du malus s'enclenche selon le nombre de joueurs :
+                <strong className="text-white"> +2.0°C</strong> à 2 joueurs, <strong className="text-white">+3.0°C</strong> à 3 joueurs, et <strong className="text-white">+4.0°C</strong> à 4 joueurs.
+              </li>
               <li><em className="text-orange-300">Exemple :</em> L'Extraction de Caoutchouc ne rapporte plus rien, et l'Aéroport vous coûte une taxe carbone.</li>
               <li><strong className="text-white">Attention à la Centrale Nucléaire :</strong> Elle rapporte beaucoup, mais si elle est activée 2 fois de suite, votre ville explose (vous perdez tout) et les bâtiments 6 de vos voisins sont détruits !</li>
             </ul>

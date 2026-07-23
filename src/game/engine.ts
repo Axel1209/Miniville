@@ -214,10 +214,13 @@ const processActivations = (state: GameState): GameState => {
   }
 
   // BLUE CARDS (All players)
+  const rcThreshold = newState.players.length; // 2.0°C for 2 players, 3.0°C for 3 players, 4.0°C for 4 players
+  const rcThresholdMargin = rcThreshold - 0.05;
+
   newState.players.forEach(player => {
     // Check if player has EELV which completely bypasses RC maluses
     const playerHasEELV = (player.cards[CardId.SIEGE_EELV] || 0) > 0;
-    const isRCMalusActiveForPlayer = !playerHasEELV && (newState.globalWarming || 0) >= 1.95;
+    const isRCMalusActiveForPlayer = !playerHasEELV && (newState.globalWarming || 0) >= rcThresholdMargin;
 
     const blueCards = [CardId.COMPOST, CardId.EXTRACTION_CAOUTCHOUC, CardId.EOLIENNE, CardId.PUITS_PETROLE, CardId.PANNEAUX_SOLAIRES];
     blueCards.forEach(cardId => {
@@ -242,7 +245,7 @@ const processActivations = (state: GameState): GameState => {
 
   // GREEN CARDS (Active player only)
   const activeHasEELV = (activePlayer.cards[CardId.SIEGE_EELV] || 0) > 0;
-  const isRCMalusActive3ForActive = !activeHasEELV && (newState.globalWarming || 0) > 3.05;
+  const isRCMalusActive3ForActive = !activeHasEELV && (newState.globalWarming || 0) >= (rcThreshold + 1 - 0.05);
 
   const greenCards = [CardId.AMAP, CardId.MAISON_AUTONOME, CardId.BIOCOOP, CardId.METHANISATION, CardId.USINE_MICHELIN, CardId.RAFFINERIE, CardId.PETIT_PAR_SERIN];
   greenCards.forEach(cardId => {
@@ -351,7 +354,7 @@ const processActivations = (state: GameState): GameState => {
       newState.logs.push(`${activePlayer.name} gagne ${totalGained} pièce(s) avec l'Aéroport.`);
     }
     
-    const isRCMalusActiveForActive = !activeHasEELV && (newState.globalWarming || 0) >= 1.95;
+    const isRCMalusActiveForActive = !activeHasEELV && (newState.globalWarming || 0) >= rcThresholdMargin;
     if (isRCMalusActiveForActive) {
       const tax = Math.min(activePlayer.coins, 5);
       activePlayer.coins -= tax;
@@ -374,6 +377,7 @@ const processActivations = (state: GameState): GameState => {
 export const buyCard = (state: GameState, cardId: CardId | null): GameState => {
   const newState = { ...state };
   const activePlayer = newState.players[newState.currentPlayerIndex];
+  const rcThreshold = state.players.length;
 
   if (cardId) {
     const card = CARDS[cardId];
@@ -384,8 +388,8 @@ export const buyCard = (state: GameState, cardId: CardId | null): GameState => {
         return state;
       }
 
-      // Check Piste de ski indoor purchase requirement (globalRC > 2.0)
-      if (cardId === CardId.PISTE_SKI_INDOOR && (state.globalWarming || 0) <= 2.0) {
+      // Check Piste de ski indoor purchase requirement (globalRC > rcThreshold)
+      if (cardId === CardId.PISTE_SKI_INDOOR && (state.globalWarming || 0) < (rcThreshold - 0.05)) {
         return state; // Restricted purchase
       }
       
