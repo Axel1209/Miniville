@@ -1,16 +1,37 @@
-import React, { useState } from 'react';
-import { BookOpen } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { BookOpen, Trophy, User } from 'lucide-react';
+import { getCurrentUser, UserProfile } from '../game/auth';
 
 interface SetupScreenProps {
   onStart: (players: string[], aiCount: number) => void;
   onShowRules: () => void;
   onPlayOnline: () => void;
+  onOpenAuth: () => void;
+  onOpenLeaderboard: () => void;
+  currentUser: UserProfile | null;
 }
 
-export const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, onShowRules, onPlayOnline }) => {
+export const SetupScreen: React.FC<SetupScreenProps> = ({
+  onStart,
+  onShowRules,
+  onPlayOnline,
+  onOpenAuth,
+  onOpenLeaderboard,
+  currentUser,
+}) => {
   const [playerCount, setPlayerCount] = useState(1);
   const [aiCount, setAiCount] = useState(1);
   const [playerNames, setPlayerNames] = useState<string[]>(['Joueur 1']);
+
+  useEffect(() => {
+    if (currentUser) {
+      setPlayerNames((prev) => {
+        const copy = [...prev];
+        copy[0] = currentUser.username;
+        return copy;
+      });
+    }
+  }, [currentUser]);
 
   const handleStart = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,20 +46,44 @@ export const SetupScreen: React.FC<SetupScreenProps> = ({ onStart, onShowRules, 
 
   const handlePlayerCountChange = (count: number) => {
     setPlayerCount(count);
-    setPlayerNames(Array.from({ length: count }, (_, i) => playerNames[i] || `Joueur ${i + 1}`));
+    setPlayerNames(
+      Array.from({ length: count }, (_, i) => {
+        if (i === 0 && currentUser) return currentUser.username;
+        return playerNames[i] || `Joueur ${i + 1}`;
+      })
+    );
   };
 
   return (
     <div className="min-h-screen bg-transparent flex items-center justify-center p-4 relative">
-      <button 
-        onClick={onShowRules}
-        className="absolute top-4 right-4 flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-300 bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 hover:text-white rounded-full transition-all backdrop-blur-md"
-      >
-        <BookOpen size={18} />
-        <span>Règles du jeu</span>
-      </button>
+      {/* Top Header Buttons */}
+      <div className="absolute top-4 right-4 flex items-center gap-2 z-10 flex-wrap justify-end">
+        <button 
+          onClick={onOpenAuth}
+          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-emerald-300 bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 hover:text-white rounded-full transition-all backdrop-blur-md"
+        >
+          <User size={16} />
+          <span>{currentUser ? currentUser.username : 'Compte'}</span>
+        </button>
 
-      <div className="bg-[#0f172a]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] p-8 max-w-md w-full">
+        <button 
+          onClick={onOpenLeaderboard}
+          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-amber-300 bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 hover:text-white rounded-full transition-all backdrop-blur-md"
+        >
+          <Trophy size={16} className="text-amber-400" />
+          <span>Scores</span>
+        </button>
+
+        <button 
+          onClick={onShowRules}
+          className="flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold text-blue-300 bg-white/5 border border-white/10 shadow-sm hover:bg-white/10 hover:text-white rounded-full transition-all backdrop-blur-md"
+        >
+          <BookOpen size={16} />
+          <span>Règles</span>
+        </button>
+      </div>
+
+      <div className="bg-[#0f172a]/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_0_30px_rgba(0,0,0,0.5)] p-8 max-w-md w-full my-12">
         <h1 className="text-3xl font-bold text-center text-blue-400 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)] tracking-tight mb-8">Miniville</h1>
         
         <form onSubmit={handleStart} className="space-y-6">
